@@ -28,13 +28,13 @@ def plotMulti(xs, ys, names, colors=None, legendWhere="bottomright", xlab="", yl
     r.plot() and then r.lines() (possibly multiple times) and adding an r.legend()
 
     :param xs: a list of vectors of x values, one vector for each dataset to be plotted
-    ys: a list of vectors of y values, as above, in the same order
-    names: the names of each dataset, used for putting together the legend 
-    colors: an optional list of colors (html hex style)
-    legendWhere: the location parameter used to specify positioning of the legend (a combination 
+    :param ys: a list of vectors of y values, as above, in the same order
+    :param names: the names of each dataset, used for putting together the legend 
+    :param colors: an optional list of colors (html hex style)
+    :param legendWhere: the location parameter used to specify positioning of the legend (a combination 
         of bottom/top and right/left)
-    plotArgs: an optional dictionary of arguments to r.plot(), for example xlim=[0,3]
-    lineArgs: an option dictionary of arguments to r.lines()
+    :param plotArgs: an optional dictionary of arguments to r.plot(), for example xlim=[0,3]
+    :param lineArgs: an option dictionary of arguments to r.lines()
 
     optional R plotting arguments can be passed in as keyword arguments [ie, plotMulti(xs, ys, names, lty=3)]
         to specify parameters for both the r.plot() and r.lines() commands """
@@ -79,8 +79,11 @@ def plotWithCor(x, y, method="spearman", main="", **kwdargs):
 def plotWithFit(x, y, main="", fitkwdargs=None, **plotkwdargs):
     """ Plots data and adds a linear best fit line to the scatterplot
 
-    fitkwdargs: a dictionary with r.line() drawing parameters for the fit line
-    additional keyword arguments arg passed directly to r.plot() """
+    Args
+        fitkwdargs: a dictionary with r.line() drawing parameters for the fit line
+            additional keyword arguments arg passed directly to r.plot()
+    """
+
     import scipy.stats
     if fitkwdargs is None:
         fitkwdargs = {}
@@ -98,7 +101,7 @@ def errbars(x=None, y=None, x_lower=None, x_upper=None, y_lower=None, y_upper=No
     x_lower: the left coordinate of the error bar
     x_upper: the right coordinate of the error bar
 
-    similarly for x, y_lower and y_upper
+    similarly for `x`, `y_lower` and `y_upper`
     uses the r.arrows() command, and passes any additional keyword args to r.arrows()
     """
     if y is not None and  x_lower is not None  and x_upper is not None:
@@ -158,7 +161,7 @@ def boxPlot(dict_, keysInOrder=None, **kwdargs):
         use a collections.OrderedDict() to easily convey the order of the groups
     keysInOrder: an optional ordering of the keys in dict_ (alternate option to using collections.OrderedDict)
 
-    additional kwdargs are passed directly to r.boxplot()
+    additional ``kwdargs`` are passed directly to ``r.boxplot()``
     """
 
     if not keysInOrder:
@@ -172,12 +175,13 @@ def boxPlot(dict_, keysInOrder=None, **kwdargs):
     return x
 
 def barPlot(dict_, keysInOrder=None, printCounts=True, ylim=None, *args, **kwdargs):
-    """ Plot a bar
+    """ Plot a bar plot
 
-    dict_: a dictionary of name -> value, where value is the height of the bar
-        use a collections.OrderedDict() to easily convey the order of the groups
-    keysInOrder: an optional ordering of the keys in dict_ (alternate option to using collections.OrderedDict)
-    printCounts: option to print the counts on top of each bar
+    Args:
+        dict_: a dictionary of name -> value, where value is the height of the bar
+            use a collections.OrderedDict() to easily convey the order of the groups
+        keysInOrder: an optional ordering of the keys in dict_ (alternate option to using collections.OrderedDict)
+        printCounts: option to print the counts on top of each bar
 
     additional kwdargs are passed directly to r.barplot()
     """

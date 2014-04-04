@@ -55,18 +55,21 @@ def getDefaultAliases():
 
 class Handler(object):
     """ Wrapper for R objects to implement:
+    
     1. default arguments
     2. argument conversion
     3. output conversion
+
     """
 
     def __init__(self, rname, pyname=None, defaults=None, converter=convertToR):
         """
-        :param name: name of the R function
-        :param defaults: a dictionary of default arguments to the function
-        :param outputs: a dictionary whose values are lists of functions used to 
-        extract values from the return R value. For example: {"p.value":[rx("p.value"), item(0), item(0)]}
-        :param converter: a conversion function used to convert python objects into R objects
+        Args
+            name: name of the R function
+            defaults: a dictionary of default arguments to the function
+            outputs: a dictionary whose values are lists of functions used to extract values from 
+                the return R value. For example: {"p.value":[rx("p.value"), item(0), item(0)]}
+            converter: a conversion function used to convert python objects into R objects
         """
         self.rname = rname
         if pyname is None:
@@ -121,6 +124,7 @@ class BetteR(object):
     """ Wrapper for rpy2.robjects.R """
 
     def __init__(self, converter=convertToR):
+        """ Initialize the RPy2 wrapper instance """
         self.aliases = getDefaultAliases()
 
         self._handlers = {}
@@ -132,6 +136,9 @@ class BetteR(object):
             self.initInteractive()
 
     def initInteractive(self):
+        """ Checks to see if we're running interactively (eg ipython), and if so, 
+        starts the event manager in RPy2. (This allows resizing of interactive 
+        plot windows.) """
         # This allows graphics windows to be resized
         from rpy2.interactive import process_revents
         try:
@@ -144,6 +151,7 @@ class BetteR(object):
 
 
     def addHandler_(self, handler):
+        """ Add a :class:`biorpy.betteR.Handler`."""
         self._handlers[handler.pyname] = handler
 
 

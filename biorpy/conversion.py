@@ -143,14 +143,13 @@ def pandasDataFrameToRPy2DataFrame(df, strings_as_factors=False):
     """
     Convert a pandas DataFrame to a R data.frame.
 
-    Parameters
-    ----------
-    df: The DataFrame being converted
-    strings_as_factors: Whether to turn strings into R factors (default: False)
 
-    Returns
-    -------
-    A R data.frame
+    Args:        
+        df: The DataFrame being converted
+        strings_as_factors: Whether to turn strings into R factors (default: False)
+
+    Returns:
+        An R data.frame
 
     """
 

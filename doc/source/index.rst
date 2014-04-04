@@ -3,13 +3,42 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to biorpy's documentation!
-==================================
+biorpy documentation
+********************
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
+
+
+Plotting
+========
+
+.. automodule:: biorpy.plotting
+   :members:
+   :special-members:
+   :exclude-members: __dict__,__weakref__
+
+Gory details
+============
+
+
+wrapper
+-------
+.. automodule:: biorpy.betteR
+   :members:
+   :special-members:
+   :exclude-members: __dict__,__weakref__
+
+conversion
+----------
+
+.. automodule:: biorpy.conversion
+   :members:
+   :special-members:
+   :exclude-members: __dict__,__weakref__
+
 
 
 
