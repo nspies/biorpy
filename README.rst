@@ -1,6 +1,4 @@
 biorpy
 ======
 
-Bio-related rpy helper functions. 
-
-.. include:: docs/source/quickstart.rst
+Bio-related rpy2 helper functions. 
