@@ -108,6 +108,7 @@ pygments_style = 'sphinx'
 try:
   import sphinx_rtd_theme
   html_theme = 'sphinx_rtd_theme'
+  html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 except ImportError:
   html_theme = 'default'
 
@@ -117,7 +118,6 @@ except ImportError:
 #html_theme_options = {}
 
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
