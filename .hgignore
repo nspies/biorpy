@@ -1,0 +1,14 @@
+# use glob syntax.
+syntax: glob
+
+*.elc
+*.pyc
+*.pyo
+*~
+.svn*
+*.svn-base
+\#*
+_build
+.*
+doc/build/*
+biorpy.egg-info/*
