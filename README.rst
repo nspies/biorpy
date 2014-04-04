@@ -3,4 +3,4 @@ biorpy
 
 Bio-related rpy helper functions. 
 
-.. include:: docs/quickstart.rst
+.. include:: docs/source/quickstart.rst
