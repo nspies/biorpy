@@ -1,44 +1,26 @@
-.. biorpy documentation master file, created by
-   sphinx-quickstart on Thu Apr  3 18:41:07 2014.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 biorpy documentation
 ********************
 
-Contents:
+Introduction
+============
+
+biorpy is a python package devoted to making it easier to access the power of R directly from python. biorpy sits as a conversion layer on top of the popular rpy2, and simplifies a number of standard tasks. Its features include:
+
+1. transparent conversion to and from pandas and numpy data formats
+2. default arguments for standard, built-in functions that might otherwise behave erratically when called using rpy2
+3. additional functions for standard plots used in biology, such as plotting multiple lines on the same plot with a legend
+
+
+Contents
+========
 
 .. toctree::
    :maxdepth: 2
 
-
-Plotting
-========
-
-.. automodule:: biorpy.plotting
-   :members:
-   :special-members:
-   :exclude-members: __dict__,__weakref__
-
-Gory details
-============
-
-
-wrapper
--------
-.. automodule:: biorpy.betteR
-   :members:
-   :special-members:
-   :exclude-members: __dict__,__weakref__
-
-conversion
-----------
-
-.. automodule:: biorpy.conversion
-   :members:
-   :special-members:
-   :exclude-members: __dict__,__weakref__
-
+   quickstart.rst
+   installation.rst
+   plotting.rst
+   underpinnings.rst
 
 
 

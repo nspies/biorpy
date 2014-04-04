@@ -65,6 +65,9 @@ class ResultWrapper(object):
     def __str__(self):
         return str(self._result)
 
+    def keys(self):
+        return list(self._result.names)
+        
     def iteritems(self):
         for key in self._result.names:
             yield (key, self[key])

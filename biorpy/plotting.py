@@ -27,17 +27,18 @@ def plotMulti(xs, ys, names, colors=None, legendWhere="bottomright", xlab="", yl
     """ Plot multiple lines on the same axes; convenience function for calling 
     r.plot() and then r.lines() (possibly multiple times) and adding an r.legend()
 
-    :param xs: a list of vectors of x values, one vector for each dataset to be plotted
-    :param ys: a list of vectors of y values, as above, in the same order
-    :param names: the names of each dataset, used for putting together the legend 
-    :param colors: an optional list of colors (html hex style)
-    :param legendWhere: the location parameter used to specify positioning of the legend (a combination 
-        of bottom/top and right/left)
-    :param plotArgs: an optional dictionary of arguments to r.plot(), for example xlim=[0,3]
-    :param lineArgs: an option dictionary of arguments to r.lines()
-
-    optional R plotting arguments can be passed in as keyword arguments [ie, plotMulti(xs, ys, names, lty=3)]
-        to specify parameters for both the r.plot() and r.lines() commands """
+    Args:
+        xs: a list of vectors of x values, one vector for each dataset to be plotted
+        ys: a list of vectors of y values, as above, in the same order
+        names: the names of each dataset, used for putting together the legend 
+        colors: an optional list of colors (html hex style)
+        legendWhere: the location parameter used to specify positioning of the legend (a combination 
+            of bottom/top and right/left)
+        plotArgs: an optional dictionary of arguments to ``r.plot()``, for example ``xlim=[0,3]``
+        lineArgs: an option dictionary of arguments to ``r.lines()``
+        kwdArgs: optional R plotting arguments can be passed in as keyword arguments [eg, plotMulti(xs, ys, names, lty=3)]
+            to specify parameters for both the ``r.plot()`` and ``r.lines()`` commands
+    """
 
     assert len(ys) == len(names)
     if len(xs) != len(ys):
@@ -80,8 +81,8 @@ def plotWithFit(x, y, main="", fitkwdargs=None, **plotkwdargs):
     """ Plots data and adds a linear best fit line to the scatterplot
 
     Args
-        fitkwdargs: a dictionary with r.line() drawing parameters for the fit line
-            additional keyword arguments arg passed directly to r.plot()
+        fitkwdargs: a dictionary with ``r.line()`` drawing parameters for the fit line
+            additional keyword arguments arg passed directly to ``r.plot()``
     """
 
     import scipy.stats

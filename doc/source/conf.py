@@ -32,7 +32,9 @@ import sphinx_rtd_theme
 extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.autodoc',
-    'sphinxcontrib.napoleon'
+    'sphinxcontrib.napoleon',
+    'IPython.sphinxext.ipython_directive',
+    'IPython.sphinxext.ipython_console_highlighting'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

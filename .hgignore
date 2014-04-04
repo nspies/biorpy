@@ -10,3 +10,5 @@ syntax: glob
 \#*
 _build
 .*
+doc/build/*
+biorpy.egg-info/*
