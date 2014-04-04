@@ -7,5 +7,5 @@ Bio-related rpy2 helper functions. To install::
     $ cd biorpy
     $ python setup.py install
 
-Click `here <http://nspies.github.io/biorpy_docs/index.html>`_ to view the documentation.
+Click `here <http://nspies.github.io/biorpy/index.html>`_ to view the documentation.
     
