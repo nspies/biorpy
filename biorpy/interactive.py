@@ -1,6 +1,8 @@
 from IPython.core.displaypub import publish_display_data
 import tempfile
 from glob import glob
+from shutil import rmtree
+
 from biorpy import r
 
 class InlineImage(object):
@@ -12,7 +14,6 @@ class InlineImage(object):
             return
         self.running = True
         self.directory = tempfile.mkdtemp()
-        print self.directory
         r.png("{}/Rplots%03d.png".format(self.directory))
     def finish(self):
         if not self.running:
@@ -21,10 +22,11 @@ class InlineImage(object):
         r.devoff()
         
         imageFiles = glob("{}/Rplots*png".format(self.directory))
-        print imageFiles
         images = [open(imgfile, 'rb').read() for imgfile in imageFiles]
 
         for image in images:
             publish_display_data("biorpy", {'image/png': image})
+
+        rmtree(self.directory)
 
 iimage = InlineImage()
