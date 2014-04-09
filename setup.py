@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(name='biorpy',
-      version='0.9',
+      version='0.9.1',
       description='Wrapper for RPy2 featuring default arguments, auto conversion to/from numpy and pandas',
       long_description=readme(),
       url='https://bitbucket.org/nspies/biorpy',
