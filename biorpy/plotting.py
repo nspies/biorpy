@@ -145,8 +145,8 @@ def ecdf(vectors, labels, colors=["red", "blue", "orange", "violet", "green", "b
 
     for i, vector in enumerate(vectors[1:]):
         r.plot(r.ecdf(vector), add=True,
-                    **{"verticals":True, "do.points":False, "col.hor":colors[i+1], "col.vert":colors[i+1],
-                       "lty":lty[i+1], "lwd":lwd[i+1]})
+                    **{"verticals":True, "do.points":False, "col.hor":colors[(i+1)%len(colors)], "col.vert":colors[(i+1)%len(colors)],
+                       "lty":lty[(i+1)%len(lty)], "lwd":lwd[(i+1)%len(lwd)]})
 
     labelsWithN = []
     for i, label in enumerate(labels):
