@@ -51,7 +51,7 @@ iimage = InlineImage()
 
 
 # Switching to use IPython.lib.display.IFrame
-    IFRAMEHTML = """<a href="{path}">{path}</a><br /><iframe name="myiframe" id="myiframe" src="{path}" height={height}px width=100%></iframe>"""
+# IFRAMEHTML = """<a href="{path}">{path}</a><br /><iframe name="myiframe" id="myiframe" src="{path}" height={height}px width=100%></iframe>"""
 
 class InlinePDF(object):
     def __init__(self):
