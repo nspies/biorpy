@@ -1,7 +1,10 @@
 from IPython.core.displaypub import publish_display_data
+from IPython.lib.display import IFrame
+from IPython.display import HTML
 import tempfile
+import os
 from glob import glob
-from shutil import rmtree
+from shutil import rmtree, copyfile
 
 from biorpy import r
 
@@ -45,3 +48,59 @@ class InlineImage(object):
         rmtree(self.directory)
 
 iimage = InlineImage()
+
+
+# Switching to use IPython.lib.display.IFrame
+    IFRAMEHTML = """<a href="{path}">{path}</a><br /><iframe name="myiframe" id="myiframe" src="{path}" height={height}px width=100%></iframe>"""
+
+class InlinePDF(object):
+    def __init__(self):
+        self.running = False
+
+    def __call__(self, path=None, **kwdargs):
+        print self.running, path
+        if not self.running:
+            if path is None:
+                raise Exception("Need to start InlinePDF first by passing the file path of the PDF to create.")
+            self.start(path, **kwdargs)
+        elif path is not None:
+            raise Exception("Need to finish InlinePDF by calling without a file path.")
+        else:
+            return self.finish()
+
+    def start(self, path, **kwdargs):
+        if self.running:
+            print "tried to restart"
+            return
+        print "starting..."
+        self.running = True
+        self.path = path
+        self.kwdargs = kwdargs
+
+        directory = os.path.dirname(path)
+        if directory and not os.path.exists(directory):
+            os.makedirs(directory)
+
+        r.pdf(path, **kwdargs)
+
+
+    def finish(self):
+        if not self.running:
+            print "tried to end but not running"
+            return
+        print "finishing"
+        self.running = False
+        r.devoff()
+
+        # this factor probably depends on browser
+        height = self.kwdargs.get("height", 7) * 100
+
+        # imagesHtml = IFRAMEHTML.format(path=self.path, height=height)
+
+        # h = imagesHtml
+
+        # print h
+        # # return HTML(h)
+    
+        return IFrame(self.path, height=height, width="100%")    
+
