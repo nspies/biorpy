@@ -51,14 +51,13 @@ iimage = InlineImage()
 
 
 # Switching to use IPython.lib.display.IFrame
-# IFRAMEHTML = """<a href="{path}">{path}</a><br /><iframe name="myiframe" id="myiframe" src="{path}" height={height}px width=100%></iframe>"""
+IFRAMEHTML = """<a href="{path}">{path}</a><br /><iframe name="myiframe" id="myiframe" src="{path}" height={height}px width=100%></iframe>"""
 
 class InlinePDF(object):
     def __init__(self):
         self.running = False
 
     def __call__(self, path=None, **kwdargs):
-        print self.running, path
         if not self.running:
             if path is None:
                 raise Exception("Need to start InlinePDF first by passing the file path of the PDF to create.")
@@ -70,9 +69,7 @@ class InlinePDF(object):
 
     def start(self, path, **kwdargs):
         if self.running:
-            print "tried to restart"
             return
-        print "starting..."
         self.running = True
         self.path = path
         self.kwdargs = kwdargs
@@ -86,21 +83,18 @@ class InlinePDF(object):
 
     def finish(self):
         if not self.running:
-            print "tried to end but not running"
             return
-        print "finishing"
         self.running = False
         r.devoff()
 
         # this factor probably depends on browser
         height = self.kwdargs.get("height", 7) * 100
 
-        # imagesHtml = IFRAMEHTML.format(path=self.path, height=height)
+        imagesHtml = IFRAMEHTML.format(path=self.path, height=height)
 
-        # h = imagesHtml
+        h = imagesHtml
 
-        # print h
-        # # return HTML(h)
+        return HTML(h)
     
-        return IFrame(self.path, height=height, width="100%")    
+        # return IFrame(self.path, height=height, width="100%")    
 
