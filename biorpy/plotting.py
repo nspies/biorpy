@@ -10,13 +10,13 @@ import pandas
 import rpy2
 
 #from rpy2.robjects import r
-from biorpy.betteR import BetteR
-import rpy2.robjects.numpy2ri
+from biorpy import r
+#import rpy2.robjects.numpy2ri
 from rpy2 import robjects as robj
 from rpy2.rlike.container import TaggedList
 # rpy2.robjects.numpy2ri.activate()
 
-r = BetteR()
+from biorpy.dotplots import DotPlots
 
 def _setdefaults(toupdate, defaults):
     """ calls dict.setdefault() multiple times """
@@ -77,7 +77,7 @@ def plotWithCor(x, y, method="spearman", main="", **kwdargs):
         
     r.plot(x, y, main="{} rs = {}".format(main, cor), **kwdargs)
 
-def plotWithFit(x, y, main="", fitkwdargs=None, **plotkwdargs):
+def plotWithFit(x, y, main="", show=["r", "p"], fitkwdargs=None, **plotkwdargs):
     """ Plots data and adds a linear best fit line to the scatterplot
 
     Args
@@ -91,7 +91,20 @@ def plotWithFit(x, y, main="", fitkwdargs=None, **plotkwdargs):
 
     slope, intercept, r_value, p_value, std_err = scipy.stats.linregress(x, y)
 
-    r.plot(x, y, main="{} r={:.2g} p={:.2g}".format(main, r_value, p_value), **plotkwdargs)
+    main = main
+    for name in show:
+        if name == "slope":
+            main += " m={:.2g}".format(slope)
+        elif name == "intercept":
+            main += " b={:.2g}".format(intercept)
+        elif name == "r":
+            main += " r={:.2g}".format(r_value)
+        elif name == "p":
+            main += " p={:.2g}".format(p_value)
+        elif name == "r2":
+            main += " r2={:.2g}".format(r_value*r_value)
+
+    r.plot(x, y, main=main, **plotkwdargs)
     r.abline(a=intercept, b=slope, **fitkwdargs)
 
 def errbars(x=None, y=None, x_lower=None, x_upper=None, y_lower=None, y_upper=None, length=0.08, *args, **kwdargs):
@@ -213,19 +226,22 @@ def scatterplotMatrix(dataFrame, main="", **kwdargs):
     """ Plots a scatterplot matrix, with scatterplots in the upper left and correlation
     values in the lower right. Input is a pandas DataFrame.
     """
-    robj.r.library("lattice")
+    r.library("lattice")
 
-    taggedList = TaggedList(map(robj.FloatVector, [dataFrame[col] for col in dataFrame.columns]), dataFrame.columns)
+    if isinstance(dataFrame, pandas.core.frame.DataFrame):
+        df = dataFrame
+    else:
+        taggedList = TaggedList(map(robj.FloatVector, [dataFrame[col] for col in dataFrame.columns]), dataFrame.columns)
+        df = robj.DataFrame(taggedList)
 
     #print taggedList
     #df = robj.r['data.frame'](**datapointsDict)
     #df = robj.r['data.frame'](taggedList)
-    df = robj.DataFrame(taggedList)
     #print df
     #robj.r.splom(df)
     #robj.r.pairs(df)
 
-    robj.r("""panel.cor <- function(x, y, digits=2, prefix="", cex.cor)
+    r("""panel.cor <- function(x, y, digits=2, prefix="", cex.cor)
     {
         usr <- par("usr"); on.exit(par(usr))
         par(usr = c(0, 1, 0, 1))
@@ -237,7 +253,7 @@ def scatterplotMatrix(dataFrame, main="", **kwdargs):
         text(0.5, 0.5, txt, cex = cex.cor * scale+0.2)
     }
     """)
-    robj.r("""panel.hist <- function(x, ...)
+    r("""panel.hist <- function(x, ...)
     {
         usr <- par("usr"); on.exit(par(usr))
         par(usr = c(usr[1:2], 0, 1.5) )
@@ -248,9 +264,11 @@ def scatterplotMatrix(dataFrame, main="", **kwdargs):
     }""")
                                         
 
-    additionalParams = {"upper.panel": robj.r["panel.smooth"], "lower.panel": robj.r["panel.cor"], "diag.panel":robj.r["panel.hist"]}
+    additionalParams = {"upper.panel": r["panel.smooth"]._robject, 
+                        "lower.panel": r["panel.cor"]._robject, 
+                        "diag.panel": r["panel.hist"]._robject}
     additionalParams.update(kwdargs)
-    robj.r["pairs"](df, main=main, **additionalParams)
+    r.pairs(df, main=main, **additionalParams)
 
 
 def plotWithSolidErrbars(x, y, upper, lower, add=False, errbarcol="lightgray", plotargs={}, polygonargs={}):
@@ -272,117 +290,168 @@ def plotWithSolidErrbars(x, y, upper, lower, add=False, errbarcol="lightgray", p
     return x, y, upper, lower, errbarx, errbary
 
 
-def dotplots(data, groups=None, drawMeans=True, drawConfInt=False, drawStd=False, memberColors=None, 
-          betweenMembers=0.5, betweenGroups=0.5, groupLabels=None, drawMemberLabels=True,
-          groupColors=None, errBarColors=None, main="", ylab="", ylim=None, jitter=0.1, mar=None):
+def dotplots(data, groups=None, **kwdargs):
+    constructorArgs = ["betweenMembers", "betweenGroups", "jitter", "drawMemberLabels", 
+                       "mar", "drawMeans", "drawStd", "drawConfInt", "errBarColors", "pointsArgs", 
+                       "errBarArgs", "xaxisArgs", "yaxisArgs"]
 
-    """ This plots a nice dot/strip plot, where all the data points for each sample are plotted in jittered
-    form
+    drawArgs = ["groupLabels", "groupColors", "xlim", "ylim", "memberColors", 
+                "memberBackgroundColors", "errBarColors"]
 
-    Args:
-        data: a dictionary or pandas dataframe, where each key/column corresponds to a sample and the values are the data points
-        groups: an optional list of lists defining a visual grouping of the sample names
-        drawMeans: option to draw a hash mark at the mean point of each sample
-        drawConfInt: option to draw error bars indicating the 95% confidence interval (calculated as +/-1.96*SEM)
-        drawStd: draw confidence intervals based on std dev
-        memberColors: list of colors for each sample; need to define the order of samples using groups
-        groupColors: list of colors, one for each group in groups; mutually exclusive with memberColors
-        betweenMembers: spacing between samples
-        betweenGroups: spacing between groups
-        groupLabels: optional list of labels for the groups; probably won't look good if drawMemberLabels is True
-        drawMemberLabels: whether or not to draw the labels for each sample (probably use in conjunction with groupLabels)
-        errBarColors: colors for the error bars; either a string, or a list of strings with length equal to the total number of samples
-        main: plot title
-        ylab: y-axis label
-        ylim: y-axis limits
-        jitter: the amount of jitter to use to distribute points for each sample
-        mar: the margins used for the plot; defaults to numpy.array([6,4.5,4,2])+0.1
+    for kwd in kwdargs:
+        if kwd not in constructorArgs and kwd not in drawArgs:
+            raise Exception("not yet (re-)implemented: {}".format(kwd))
 
-    """
+    constructorInput = dict((key, kwdargs[key]) for key in kwdargs if key in constructorArgs)
+    plotter = DotPlots(**constructorInput)
 
-    import scipy.stats
+    drawInput = dict((key, kwdargs[key]) for key in kwdargs if key in drawArgs)
+    plotter.draw(data, groups, **drawInput)
+
+
+# DIDWARN = False
+# def dotplots(data, groups=None, drawMeans=True, drawConfInt=False, drawStd=False, memberColors=None, 
+#           betweenMembers=0.5, betweenGroups=0.5, groupLabels=None, drawMemberLabels=True, memberBackgroundColors=None,
+#           groupBackgroundColors=None, errBarArgs=None, plotArgs=None,
+#           groupColors=None, errBarColors=None, main="", ylab="", ylim=None, jitter=0.1, mar=None, **kwdargs):
+#     """ This plots a nice dot/strip plot, where all the data points for each sample are plotted in jittered
+#     form
+
+#     Args:
+#         data: a dictionary of lists or a pandas dataframe, where each key/column corresponds to a sample or set of 
+#             samples and the values are the data points
+#         groups: an optional list of lists defining a visual grouping of the sample names
+#         drawMeans: option to draw a hash mark at the mean point of each sample
+#         drawConfInt: option to draw error bars indicating the 95% confidence interval (calculated as +/-1.96*SEM)
+#         drawStd: draw confidence intervals based on std dev
+#         memberColors: list of colors for each sample; need to define the order of samples using groups
+#         groupColors: list of colors, one for each group in groups; mutually exclusive with memberColors
+#         betweenMembers: spacing between samples
+#         betweenGroups: spacing between groups
+#         groupLabels: optional list of labels for the groups; probably won't look good if drawMemberLabels is True
+#         drawMemberLabels: whether or not to draw the labels for each sample (probably use in conjunction with groupLabels)
+#         errBarColors: colors for the error bars; either a string, or a list of strings with length equal to the total number of samples
+#         main: plot title
+#         ylab: y-axis label
+#         ylim: y-axis limits
+#         jitter: the amount of jitter to use to distribute points for each sample
+#         mar: the margins used for the plot; defaults to numpy.array([6,4.5,4,2])+0.1
+#     """
+
+#     import scipy.stats
+
+#     global DIDWARN
+#     if not DIDWARN:
+#         print "The dotplots() function is deprecated"
+#         DIDWARN = True
+
     
-    if groups is None:
-        assert memberColors is None
-        groups = [[x] for x in data]
+#     if groups is None:
+#         assert memberColors is None
+#         groups = [[x] for x in data]
     
-    members = []
-    positions = {}
-    curPosition = 0
-    groupPositions = []
+#     members = []
+#     positions = {}
+#     curPosition = 0
+#     groupPositions = []
 
-    for group in groups:
-        curGroupPositions = []
-        for member in group:
-            members.append(member)
-            positions[member] = curPosition
-            curGroupPositions.append(curPosition)
-            curPosition += betweenMembers
-        groupPositions.append((max(curGroupPositions)+min(curGroupPositions))/2.0)
-        curPosition += betweenGroups
+#     for group in groups:
+#         curGroupPositions = []
+#         for member in group:
+#             members.append(member)
+#             positions[member] = curPosition
+#             curGroupPositions.append(curPosition)
+#             curPosition += betweenMembers
+#         groupPositions.append((max(curGroupPositions)+min(curGroupPositions))/2.0)
+#         curPosition += betweenGroups
     
-    if memberColors is not None and groupColors is not None:
-        raise Exception("may only define one of groupColors, memberColors")
-    elif groupColors is not None:
-        memberColors = []
-        for i, group in enumerate(groups):
-            memberColors.extend([groupColors[i]]*len(group))
-    elif memberColors is not None:
-        if isinstance(memberColors, list):
-            assert len(memberColors) == len(members)
-        elif isinstance(memberColors, basestring):
-            memberColors = [memberColors] * len(members)
-    else:
-        memberColors = ["black"] * len(members)
+#     if memberColors is not None and groupColors is not None:
+#         raise Exception("may only define one of groupColors, memberColors")
+#     elif groupColors is not None:
+#         memberColors = []
+#         for i, group in enumerate(groups):
+#             memberColors.extend([groupColors[i]]*len(group))
+#     elif memberColors is not None:
+#         if isinstance(memberColors, list):
+#             assert len(memberColors) == len(members)
+#         elif isinstance(memberColors, basestring):
+#             memberColors = [memberColors] * len(members)
+#     else:
+#         memberColors = ["black"] * len(members)
         
-    if isinstance(errBarColors, basestring):
-        errBarColors = [errBarColors] * len(members)
+#     if isinstance(errBarColors, basestring):
+#         errBarColors = [errBarColors] * len(members)
     
-    xlim = [min(positions.values()) - betweenMembers/2.0, max(positions.values()) + betweenMembers/2.0]
-    if ylim is not None:
-        pass
-    elif isinstance(data, pandas.DataFrame):
-        ylim = [data.min().min(), data.max().max()]
-    else:
-        low = min(min(data[x]) for x in data)
-        high = max(max(data[x]) for x in data)
-        ylim = [low, high]
+#     xlim = [min(positions.values()) - betweenMembers/2.0, max(positions.values()) + betweenMembers/2.0]
+#     if ylim is not None:
+#         pass
+#     elif isinstance(data, pandas.DataFrame):
+#         ylim = [data.min().min(), data.max().max()]
+#     else:
+#         low = min(min(data[x]) for x in data)
+#         high = max(max(data[x]) for x in data)
+#         ylim = [low, high]
     
-    if mar is None:
-        mar = numpy.array([6,4.5,4,2])+0.1
-    oldpar = r.par(las=2, mar=mar)
+#     if mar is None:
+#         mar = numpy.array([6,4.5,4,2])+0.1
+#     oldpar = r.par(las=2, mar=mar)
 
-    for i, member in enumerate(members):
-        curColor = memberColors[i]
-        x = r.jitter([positions[member]]*len(data[member]), amount=jitter)
-        if i == 0:
-            r.plot(x, data[member], cex=1.5, lwd=2, col=curColor, xlim=xlim, ylim=ylim, xaxt="n", main=main, ylab=ylab,
-                   **{"cex.lab":1.25})
-        else:
-            r.points(x, data[member], cex=1.5, lwd=2, col=curColor)
+#     plotArgDefaults = {"cex":1.5, "lwd":2}
+#     if plotArgs is None: plotArgs = {}
+#     _setdefaults(plotArgs, plotArgDefaults)
+
+#     r.plot(1, cex=plotArgs["cex"], xlim=xlim, ylim=ylim, xaxt="n", yaxt="n", main=main, ylab=ylab, type="n")
+#                    # **{"cex.lab":1.25})
+#     r.axis(2, kwdargs.get("cex.axis", 1.0))
+
+#     if memberBackgroundColors is not None:
+#         if groupBackgroundColors is not None:
+#             raise Exception("should only define either member or group background colors!")
+#         assert len(memberBackgroundColors) == len(members)
+#         for member, bgColor in zip(members, memberBackgroundColors):
+#             # y1 = r.par("usr")[2]
+#             # y2 = r.par("usr")[3]
+#             y1 = ylim[0]
+#             y2 = ylim[1]
+#             r.rect(positions[member]-betweenMembers/2.0, y1, positions[member]+betweenMembers/2.0, y2, 
+#                 col=bgColor, border=False)
+
+
+#     for i, member in enumerate(members):
+#         curColor = memberColors[i]
+#         x = r.jitter([positions[member]]*len(data[member]), amount=jitter)
+#         # if i == 0:
+#         #     r.plot(x, data[member], cex=1.5, lwd=2, col=curColor, xlim=xlim, ylim=ylim, xaxt="n", main=main, ylab=ylab,
+#         #            **{"cex.lab":1.25})
+#         # else:
+#         r.points(x, data[member], cex=plotArgs["cex"], lwd=plotArgs["lwd"], col=curColor)
     
-    for i, member in enumerate(members):
-        x = positions[member]
-        y = numpy.mean(data[member])
-        if errBarColors is None:
-            curColor = memberColors[i]
-        else:
-            curColor = errBarColors[i]
+#     errBarDefaults = {"lwd":2, "length":0.1}
+#     if errBarArgs is None: errBarArgs = {}
+#     _setdefaults(errBarArgs, errBarDefaults)
+
+#     for i, member in enumerate(members):
+#         x = positions[member]
+#         y = numpy.mean(data[member])
+#         if errBarColors is None:
+#             curColor = memberColors[i]
+#         else:
+#             curColor = errBarColors[i]
                 
-        if drawMeans:
-            r.segments(x-0.2, y, x+0.2, y, lwd=2, col=curColor)
+#         if drawMeans:
+#             r.segments(x-0.2, y, x+0.2, y, lwd=errBarArgs["lwd"], col=curColor)
 
-        curValues = numpy.asarray(data[member])
-        curValues = curValues[~numpy.isnan(curValues)]
-        if drawConfInt:
-            ci = scipy.stats.sem(curValues) * 1.96
-            r.arrows(x, y-ci, x, y+ci, lwd=2, col=curColor, angle=90, code=3, length=0.1)
-        if drawStd:
-            ci = numpy.std(curValues)
-            r.arrows(x, y-ci, x, y+ci, lwd=2, col=curColor, angle=90, code=3, length=0.1)
+#         curValues = numpy.asarray(data[member])
+#         curValues = curValues[~numpy.isnan(curValues)]
+#         if drawConfInt:
+#             ci = scipy.stats.sem(curValues) * 1.96
+#             r.arrows(x, y-ci, x, y+ci, lwd=errBarArgs["lwd"], col=curColor, angle=90, code=3, length=errBarArgs["length"])
+#         if drawStd:
+#             ci = numpy.std(curValues)
+#             r.arrows(x, y-ci, x, y+ci, lwd=errBarArgs["lwd"], col=curColor, angle=90, code=3, length=errBarArgs["length"])
 
-    if drawMemberLabels:
-        r.mtext([str(x) for x in members], side=1, line=1, at=[positions[x] for x in members], )#, col=memberColors)
-    if groupLabels is not None:
-        r.mtext(groupLabels, side=1, line=2, las=1, at=groupPositions)
-    r.par(oldpar)
+#     if drawMemberLabels:
+#         r.mtext([str(x) for x in members], side=1, line=1, at=[positions[x] for x in members])#, col=memberColors)
+#     if groupLabels is not None:
+#         r.mtext(groupLabels, side=1, line=2, las=1, at=groupPositions, cex=1.6)
+#     r.par(oldpar)
