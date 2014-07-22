@@ -57,7 +57,8 @@ class InlineImage(object):
             images = [open(imgfile, 'rb').read() for imgfile in imageFiles]
 
             for image in images:
-                publish_display_data("biorpy", {image_type: image})
+                # publish_display_data("biorpy", {image_type: image})
+                publish_display_data({image_type: image})
 
         rmtree(self.directory)
 
