@@ -1,17 +1,27 @@
 import numpy
 import pandas
-from biorpy import r
+from biorpy import r, asstr
 
-def asdict(x):
+def asdict(x, defaults=None):
+    if defaults is None:
+        defaults = {}
     if x is None:
-        return {}
-    return x
+        return defaults
+    defaults.update(x)
+    return defaults
 
+def aslist(value, length):
+    if isinstance(value, list):
+        assert len(value) == length
+    elif isinstance(value, basestring):
+        value = [value] * length
+    return value
 
 class DotPlots(object):
     def __init__(self, betweenMembers=0.5, betweenGroups=0.5, jitter=0.1, drawMemberLabels=True, memberColors="black", mar=None,
             drawMeans=True, drawStd=False, drawConfInt=True, errBarColors="black",
-            pointsArgs=None, errBarArgs=None, xaxisArgs=None, yaxisArgs=None):
+            pointsArgs=None, errBarArgs=None, memberLabelArgs=None, groupLabelArgs=None, plotArgs=None, yaxisArgs=None,
+            deterministicJitter=True):
         self.betweenMembers = betweenMembers
         self.betweenGroups = betweenGroups
         self.defaultMemberColors = memberColors
@@ -23,18 +33,24 @@ class DotPlots(object):
         self.drawStd = drawStd
         self.drawConfInt = drawConfInt
 
-        self.pointsArgs = asdict(pointsArgs)
+        self.pointsArgs = asdict(pointsArgs, {"cex":1.5, "lwd":2})
+        self.plotArgs = asdict(plotArgs)
         self.errBarArgs = asdict(errBarArgs)
-
-        self.xaxisArgs = asdict(xaxisArgs)
         self.yaxisArgs = asdict(yaxisArgs)
+
+        self.memberLabelArgs = asdict(memberLabelArgs)
+        self.groupLabelArgs = asdict(groupLabelArgs, {"cex":1.6, "las":1})
 
         if mar is None:
             mar = numpy.array([6,4.5,4,2])+0.1
         self.mar = mar
 
-    def draw(self, data, groups=None, groupLabels=None, groupColors=None, xlim=None, ylim=None, memberColors=None, 
-            memberBackgroundColors=None, errBarColors=None):
+        if deterministicJitter:
+            r("set.seed")(2521)
+
+
+    def draw(self, data, groups=None, groupLabels=None, groupColors=None, nestedColors=None, xlim=None, ylim=None, memberColors=None, 
+            memberBackgroundColors=None, errBarColors=None, xlab="", ylab="", main=""):
         oldpar = r.par(las=2, mar=self.mar)
 
         self.data = data
@@ -46,18 +62,20 @@ class DotPlots(object):
 
         self._getPositions()
         self._getAxisSizes(xlim, ylim)
-        self._getMemberColors(memberColors, groupColors)
+        self._getMemberColors(memberColors, groupColors, nestedColors)
         self._getErrBarColors(errBarColors)
         self._getBackgroundColors(memberBackgroundColors)
 
-        self.plot()
+        memberCoords, groupCoords = self.plot(main=main, xlab=xlab, ylab=ylab)
 
         r.par(oldpar)
 
-    def plot(self):
+        return memberCoords, groupCoords
+
+    def plot(self, xlab="", ylab="", main=""):
         # open plotting with an empty plot, custom axes
-        r.plot(1, xlim=self.xlim, ylim=self.ylim, xaxt="n", yaxt="n", type="n")
-        r.axis(2)
+        r.plot(1, xlim=self.xlim, ylim=self.ylim, xlab=xlab, ylab=ylab, xaxt="n", yaxt="n", type="n", main=main, **self.plotArgs)
+        r.axis(2, **self.yaxisArgs)
 
         # draw the background colors
         if self.memberBackgroundColors is not None:
@@ -74,7 +92,7 @@ class DotPlots(object):
         for i, member in enumerate(self.members):
             curColor = self.memberColors[i]
             x = r.jitter([self.positions[member]]*len(self.data[member]), amount=self.jitter)
-            r.points(x, self.data[member], col=curColor)
+            r.points(x, self.data[member], col=curColor, **self.pointsArgs)
 
         # draw the error bars
         if self.drawConfInt:
@@ -98,18 +116,21 @@ class DotPlots(object):
 
         # add in the labels
         if self.drawMemberLabels:
-            r.mtext([str(x) for x in self.members], side=1, line=1, at=[self.positions[x] for x in self.members])
+            r.mtext(asstr(self.members), side=1, line=1, at=[self.positions[x] for x in self.members], **self.memberLabelArgs)
+            # r.mtext([str(x) for x in self.members], side=1, line=1, at=[self.positions[x] for x in self.members], **self.memberLabelArgs)
         if self.groupLabels is not None:
-            r.mtext(self.groupLabels, side=1, line=2, las=1, at=self.groupPositions, cex=1.6)
+            r.mtext(asstr(self.groupLabels), side=1, line=2, at=self.groupPositions, **self.groupLabelArgs)
+
+        return [self.positions[member] for member in self.members], self.groupPositions
 
     def _getErrBarColors(self, errBarColors):
         if errBarColors is None:
             self.errBarColors = [self.defaultErrBarColors] * len(self.members)
         else:
-            self.errBarColors = errBarColors
+            self.errBarColors = aslist(errBarColors, len(self.members))
 
-    def _getMemberColors(self, memberColors, groupColors):
-        if memberColors is not None and groupColors is not None:
+    def _getMemberColors(self, memberColors, groupColors, nestedColors):
+        if sum(map(bool, [memberColors, groupColors, nestedColors])) > 1:
             raise Exception("may only define one of groupColors, memberColors")
         elif groupColors is not None:
             memberColors = []
@@ -120,6 +141,8 @@ class DotPlots(object):
                 assert len(memberColors) == len(self.members)
             elif isinstance(memberColors, basestring):
                 memberColors = [memberColors] * len(self.members)
+        elif nestedColors is not None:
+            memberColors = nestedColors
         else:
             memberColors = [self.defaultMemberColors] * len(self.members)
 
@@ -127,7 +150,9 @@ class DotPlots(object):
 
     def _getBackgroundColors(self, memberBackgroundColors):
         ## XXX SHOULD EXTEND TO ALLOW SETTING GROUP BACKGROUND COLORS OR ALTERNATING BACKGROUND COLORS PER SAMPLE/GROUP
-        self.memberBackgroundColors = memberBackgroundColors
+        self.memberBackgroundColors = None
+        if memberBackgroundColors is not None:
+            self.memberBackgroundColors = aslist(memberBackgroundColors, len(self.members))
 
 
     def _getAxisSizes(self, xlim, ylim):

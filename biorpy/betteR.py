@@ -62,7 +62,7 @@ class Handler(object):
 
     """
 
-    def __init__(self, rname, pyname=None, defaults=None, converter=convertToR):
+    def __init__(self, rname, pyname=None, defaults=None, converter=convertToR, beforeFn=None, afterFn=None):
         """
         Args
             name: name of the R function
@@ -84,7 +84,15 @@ class Handler(object):
         # may want some extra error checking here
         self._robject = robjects.r[self.rname]
 
+        self.beforeFn = beforeFn
+        self.afterFn = afterFn
+
     def __call__(self, *args, **kwdargs):
+        if self.beforeFn is not None:
+            retval = self.beforeFn(*args, **kwdargs)
+            if retval is not None:
+                args, kwdargs = retval
+
         # python -> R conversion
         args = [self.converter(arg) for arg in args]
         for kwd in kwdargs:
@@ -108,6 +116,10 @@ class Handler(object):
         #         result[output] = reduce(lambda x, f: f(x), self.outputs[output], rval)
 
         #     rval.py = result
+
+        if self.afterFn is not None:
+            self.afterFn(*args, **kwdargs)
+            
         return rval
 
     def help(self):

@@ -6,6 +6,15 @@ from rpy2 import robjects, rinterface
 
 ## CONVERSION
 
+def asstr(x):
+    return robjects.StrVector(x)
+    
+def asint(x):
+    return robjects.IntVector(x)
+
+def asfloat(x):
+    return robjects.FloatVector(x)
+
 # this might be best put in a separate module
 def convertToR(obj):
     """

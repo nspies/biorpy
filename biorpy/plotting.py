@@ -16,7 +16,7 @@ from rpy2 import robjects as robj
 from rpy2.rlike.container import TaggedList
 # rpy2.robjects.numpy2ri.activate()
 
-from biorpy.dotplots import DotPlots
+from biorpy.dotplots import DotPlots, asdict
 
 def _setdefaults(toupdate, defaults):
     """ calls dict.setdefault() multiple times """
@@ -75,7 +75,7 @@ def plotWithCor(x, y, method="spearman", main="", **kwdargs):
     """ Adds the correlation coefficient to the title of a scatterplot """
     cor = r.cor(x, y, method=method)[0]
         
-    r.plot(x, y, main="{} rs = {}".format(main, cor), **kwdargs)
+    r.plot(x, y, main="{} rs = {:.3g}".format(main, cor), **kwdargs)
 
 def plotWithFit(x, y, main="", show=["r", "p"], fitkwdargs=None, **plotkwdargs):
     """ Plots data and adds a linear best fit line to the scatterplot
@@ -127,9 +127,9 @@ def errbars(x=None, y=None, x_lower=None, x_upper=None, y_lower=None, y_upper=No
             
     
 
-def ecdf(vectors, labels, colors=["red", "blue", "orange", "violet", "green", "brown"],
+def ecdf(vectors, labels=None, colors=["red", "blue", "orange", "violet", "green", "brown"],
          xlab="", ylab="cumulative fraction", main="", legendWhere="topleft", 
-         lty=1, lwd=1, **ecdfKwdArgs):
+         lty=1, lwd=1, legendArgs=None, labelsIncludeN=True, **ecdfKwdArgs):
     """ Take a list of lists, convert them to vectors, and plots them sequentially on a CDF """
 
     #print "MEANS:", main
@@ -161,10 +161,15 @@ def ecdf(vectors, labels, colors=["red", "blue", "orange", "violet", "green", "b
                     **{"verticals":True, "do.points":False, "col.hor":colors[(i+1)%len(colors)], "col.vert":colors[(i+1)%len(colors)],
                        "lty":lty[(i+1)%len(lty)], "lwd":lwd[(i+1)%len(lwd)]})
 
-    labelsWithN = []
-    for i, label in enumerate(labels):
-        labelsWithN.append(label+" (n=%d)"%len(vectors[i]))
-    r.legend(legendWhere, legend=labelsWithN, lty=lty, lwd=[lwdi*2 for lwdi in lwd], col=colors, cex=0.7, bg="white")
+    if labels is not None:
+        if labelsIncludeN:
+            labelsWithN = []
+            for i, label in enumerate(labels):
+                labelsWithN.append(label+" (n=%d)"%len(vectors[i]))
+        else:
+            labelsWithN = labels
+        legendArgs = asdict(legendArgs, {"cex":0.7})
+        r.legend(legendWhere, legend=labelsWithN, lty=lty, lwd=[lwdi*2 for lwdi in lwd], col=colors, bg="white", **legendArgs)
 
 
 
@@ -292,11 +297,11 @@ def plotWithSolidErrbars(x, y, upper, lower, add=False, errbarcol="lightgray", p
 
 def dotplots(data, groups=None, **kwdargs):
     constructorArgs = ["betweenMembers", "betweenGroups", "jitter", "drawMemberLabels", 
-                       "mar", "drawMeans", "drawStd", "drawConfInt", "errBarColors", "pointsArgs", 
-                       "errBarArgs", "xaxisArgs", "yaxisArgs"]
+                       "mar", "drawMeans", "drawStd", "drawConfInt", "errBarColors", "pointsArgs", "plotArgs",
+                       "yaxisArgs", "errBarArgs", "groupLabelArgs", "memberLabelArgs"]
 
-    drawArgs = ["groupLabels", "groupColors", "xlim", "ylim", "memberColors", 
-                "memberBackgroundColors", "errBarColors"]
+    drawArgs = ["groupLabels", "groupColors", "xlim", "ylim", "memberColors", "nestedColors",
+                "memberBackgroundColors", "errBarColors", "main", "xlab", "ylab"]
 
     for kwd in kwdargs:
         if kwd not in constructorArgs and kwd not in drawArgs:
@@ -306,7 +311,9 @@ def dotplots(data, groups=None, **kwdargs):
     plotter = DotPlots(**constructorInput)
 
     drawInput = dict((key, kwdargs[key]) for key in kwdargs if key in drawArgs)
-    plotter.draw(data, groups, **drawInput)
+    
+    return plotter.draw(data, groups, **drawInput)
+
 
 
 # DIDWARN = False
