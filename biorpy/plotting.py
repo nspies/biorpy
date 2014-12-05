@@ -147,19 +147,31 @@ def ecdf(vectors, labels=None, colors=["red", "blue", "orange", "violet", "green
     lty = _expand(lty)
     lwd = _expand(lwd)
 
-    ecdfKwdArgs.update({"verticals":True, "do.points":False, "col.hor":colors[0], "col.vert":colors[0], "lty":lty[0], "lwd":lwd[0]})
+    # ecdfKwdArgs.update({"verticals":True, "do.points":False, "col.hor":colors[0], "col.vert":colors[0], "lty":lty[0], "lwd":lwd[0]})
 
     if not "xlim" in ecdfKwdArgs or ecdfKwdArgs["xlim"] is None:
-        xlim = [min(min(vector) for vector in vectors),
-                max(max(vector) for vector in vectors)]
+        xlim = [min(min(vector) for vector in vectors if len(vector) > 0),
+                max(max(vector) for vector in vectors if len(vector) > 0)]
         ecdfKwdArgs["xlim"] = xlim
 
-    r.plot(r.ecdf(vectors[0]), main=main, xlab=xlab, ylab=ylab, **ecdfKwdArgs)
 
-    for i, vector in enumerate(vectors[1:]):
-        r.plot(r.ecdf(vector), add=True,
-                    **{"verticals":True, "do.points":False, "col.hor":colors[(i+1)%len(colors)], "col.vert":colors[(i+1)%len(colors)],
-                       "lty":lty[(i+1)%len(lty)], "lwd":lwd[(i+1)%len(lwd)]})
+    started = False
+    for i, vector in enumerate(vectors):
+        if len(vector) > 0:
+            ecdfKwdArgs.update({"verticals":True, "do.points":False, 
+                                "col.hor":colors[(i)%len(colors)],
+                                "col.vert":colors[(i)%len(colors)],
+                                "lty":lty[(i)%len(lty)],
+                                "lwd":lwd[(i)%len(lwd)]})
+            if not started:
+                r.plot(r.ecdf(vector), main=main, xlab=xlab, ylab=ylab, **ecdfKwdArgs)
+                started = True
+            else:
+                r.plot(r.ecdf(vector), add=True, **ecdfKwdArgs)
+
+        # r.plot(r.ecdf(vector), add=True,
+        #             **{"verticals":True, "do.points":False, "col.hor":colors[(i+1)%len(colors)], "col.vert":colors[(i+1)%len(colors)],
+        #                "lty":lty[(i+1)%len(lty)], "lwd":lwd[(i+1)%len(lwd)]})
 
     if labels is not None:
         if labelsIncludeN:
