@@ -10,7 +10,7 @@ import pandas
 import rpy2
 
 #from rpy2.robjects import r
-from biorpy import r
+from biorpy import r, conversion
 #import rpy2.robjects.numpy2ri
 from rpy2 import robjects as robj
 from rpy2.rlike.container import TaggedList
@@ -237,6 +237,14 @@ def barPlot(dict_, keysInOrder=None, printCounts=True, ylim=None, *args, **kwdar
         r.text(x, heights, heightsStrings, pos=3)
     return x
 
+def barPlot2(dataframe, legend=False, legendWhere="topright", **kwdArgs):
+    rdf = conversion.pandasDataFrameToRPy2DataFrame(dataframe)
+    if legend:
+        kwdArgs["legend.text"] = list(dataframe.index)
+        kwdArgs["args.legend"] = robj.ListVector({"x":legendWhere})
+    kwdArgs.setdefault("names.arg", list(dataframe.columns))
+    coords = r.barplot(r("as.matrix")(rdf), **kwdArgs)
+    return coords
 
 
 def scatterplotMatrix(dataFrame, main="", **kwdargs):
