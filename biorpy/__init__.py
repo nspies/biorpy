@@ -5,3 +5,5 @@ from biorpy import pandas_additions
 from biorpy.interactive import iimage
 
 from biorpy.conversion import asstr, asfloat, asint
+
+from biorpy.formula import Model, GAM
