@@ -26,7 +26,7 @@ def convertToR(obj):
     """
     if isinstance(obj, pandas.core.frame.DataFrame):
         return pandasDataFrameToRPy2DataFrame(obj)
-    elif isinstance(obj, pandas.Series):
+    elif isinstance(obj, pandas.Series) or isinstance(obj, pandas.core.index.NumericIndex):
         return convertToR(list(obj))
     elif isinstance(obj, numpy.ndarray):
         return numpy2ri.numpy2ri(obj)
@@ -42,7 +42,7 @@ def convertToR(obj):
                 return robjects.StrVector(obj)
             except ValueError:
                 pass
-    elif isinstance(obj, OrderedDict):
+    elif isinstance(obj, dict):
         lengths = set()
         asrpy2 = OrderedDict()
 
@@ -110,11 +110,14 @@ def addResultWrapper(result):
     if isinstance(result, numpy.ndarray):
         return
 
-    if isinstance(result, robjects.vectors.DataFrame):
-        result.py = rpy2DataFrameToPandasDataFrame(result)
-    else:
-        result.py = ResultWrapper(result)
-
+    try:
+        if isinstance(result, robjects.vectors.DataFrame):
+            result.py = rpy2DataFrameToPandasDataFrame(result)
+        else:
+            result.py = ResultWrapper(result)
+    except:
+        result.py = None
+        
 def convertFromR(obj):
     if isinstance(obj, robjects.vectors.DataFrame):
         return rpy2DataFrameToPandasDataFrame(obj)
@@ -147,7 +150,7 @@ NA_TYPES = {numpy.float64: robjects.NA_Real,
 import rpy2.rlike.container as rlc
 
 def rpy2DataFrameToPandasDataFrame(rdf):
-    recarray = numpy2ri.ri2numpy(rdf)
+    recarray = numpy.transpose(numpy.asarray(rdf))
     df = pandas.DataFrame.from_records(recarray, index=list(rdf.rownames), columns=list(rdf.colnames))
     return df
 

@@ -19,17 +19,19 @@ def aslist(value, length):
 
 class DotPlots(object):
     def __init__(self, betweenMembers=0.5, betweenGroups=0.5, jitter=0.1, drawMemberLabels=True, memberColors="black", mar=None,
-            drawMeans=True, drawStd=False, drawConfInt=True, errBarColors="black",
+            drawMeans=True, drawMedians=False, drawStd=False, drawConfInt=True, errBarColors="black",
             pointsArgs=None, errBarArgs=None, memberLabelArgs=None, groupLabelArgs=None, plotArgs=None, yaxisArgs=None,
-            deterministicJitter=True):
+            deterministicJitter=True, ordered=False, labelAngle=90):
         self.betweenMembers = betweenMembers
         self.betweenGroups = betweenGroups
         self.defaultMemberColors = memberColors
         self.defaultErrBarColors = errBarColors
         self.drawMemberLabels = drawMemberLabels
         self.jitter = jitter
+        self.ordered = ordered
 
         self.drawMeans = drawMeans
+        self.drawMedians = drawMedians
         self.drawStd = drawStd
         self.drawConfInt = drawConfInt
 
@@ -40,6 +42,8 @@ class DotPlots(object):
 
         self.memberLabelArgs = asdict(memberLabelArgs)
         self.groupLabelArgs = asdict(groupLabelArgs, {"cex":1.6, "las":1})
+        self.labelAngle = labelAngle
+
 
         if mar is None:
             mar = numpy.array([6,4.5,4,2])+0.1
@@ -91,8 +95,13 @@ class DotPlots(object):
         # draw the different sets of points
         for i, member in enumerate(self.members):
             curColor = self.memberColors[i]
-            x = r.jitter([self.positions[member]]*len(self.data[member]), amount=self.jitter)
-            r.points(x, self.data[member], col=curColor, **self.pointsArgs)
+            if self.ordered:
+                x = numpy.linspace(self.positions[member]-self.jitter, self.positions[member]+self.jitter, len(self.data[member]))
+                y = sorted(self.data[member])
+            else:
+                x = r.jitter([self.positions[member]]*len(self.data[member]), amount=self.jitter)
+                y = self.data[member]
+            r.points(x, y, col=curColor, **self.pointsArgs)
 
         # draw the error bars
         if self.drawConfInt:
@@ -100,23 +109,31 @@ class DotPlots(object):
 
         for member, curColor in zip(self.members, self.errBarColors):
             x = self.positions[member]
-            y = numpy.mean(self.data[member])
                     
             if self.drawMeans:
+                y = numpy.mean(self.data[member])
+                r.segments(x-0.2, y, x+0.2, y, lwd=2, col=curColor)
+            elif self.drawMedians:
+                y = numpy.median(self.data[member])
                 r.segments(x-0.2, y, x+0.2, y, lwd=2, col=curColor)
 
             curValues = numpy.asarray(self.data[member])
             curValues = curValues[~numpy.isnan(curValues)]
             if self.drawConfInt:
                 ci = scipy.stats.sem(curValues) * 1.96
+                y = numpy.mean(self.data[member])
                 r.arrows(x, y-ci, x, y+ci, lwd=2, col=curColor, angle=90, code=3, length=0.1)
             if self.drawStd:
                 ci = numpy.std(curValues)
+                y = numpy.mean(self.data[member])
                 r.arrows(x, y-ci, x, y+ci, lwd=2, col=curColor, angle=90, code=3, length=0.1)
 
         # add in the labels
         if self.drawMemberLabels:
-            r.mtext(asstr(self.members), side=1, line=1, at=[self.positions[x] for x in self.members], **self.memberLabelArgs)
+            # r.mtext(asstr(self.members), side=1, line=1, at=[self.positions[x] for x in self.members], **self.memberLabelArgs)
+            r.text([self.positions[x] for x in self.members], r('par("usr")[3] - 0.25'), labels=asstr(self.members), 
+                xpd=True, srt=self.labelAngle, adj=1, **self.memberLabelArgs)
+
             # r.mtext([str(x) for x in self.members], side=1, line=1, at=[self.positions[x] for x in self.members], **self.memberLabelArgs)
         if self.groupLabels is not None:
             r.mtext(asstr(self.groupLabels), side=1, line=2, at=self.groupPositions, **self.groupLabelArgs)

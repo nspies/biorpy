@@ -318,7 +318,8 @@ def plotWithSolidErrbars(x, y, upper, lower, add=False, errbarcol="lightgray", p
 def dotplots(data, groups=None, **kwdargs):
     constructorArgs = ["betweenMembers", "betweenGroups", "jitter", "drawMemberLabels", 
                        "mar", "drawMeans", "drawStd", "drawConfInt", "errBarColors", "pointsArgs", "plotArgs",
-                       "yaxisArgs", "errBarArgs", "groupLabelArgs", "memberLabelArgs"]
+                       "yaxisArgs", "errBarArgs", "groupLabelArgs", "memberLabelArgs", "labelAngle", "ordered",
+                       "drawMedians"]
 
     drawArgs = ["groupLabels", "groupColors", "xlim", "ylim", "memberColors", "nestedColors",
                 "memberBackgroundColors", "errBarColors", "main", "xlab", "ylab"]
