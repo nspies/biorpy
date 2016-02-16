@@ -13,7 +13,7 @@ def asdict(x, defaults=None):
 def aslist(value, length):
     if isinstance(value, list):
         assert len(value) == length
-    elif isinstance(value, basestring):
+    elif isinstance(value, basestring) or isinstance(value, int) or isinstance(value, float):
         value = [value] * length
     return value
 
@@ -26,6 +26,7 @@ class DotPlots(object):
         self.betweenGroups = betweenGroups
         self.defaultMemberColors = memberColors
         self.defaultErrBarColors = errBarColors
+        self.defaultErrBarLwd = 2
         self.drawMemberLabels = drawMemberLabels
         self.jitter = jitter
         self.ordered = ordered
@@ -54,7 +55,7 @@ class DotPlots(object):
 
 
     def draw(self, data, groups=None, groupLabels=None, groupColors=None, nestedColors=None, xlim=None, ylim=None, memberColors=None, 
-            memberBackgroundColors=None, errBarColors=None, xlab="", ylab="", main=""):
+            memberBackgroundColors=None, errBarColors=None, errBarLwds=None, xlab="", ylab="", main=""):
         oldpar = r.par(las=2, mar=self.mar)
 
         self.data = data
@@ -68,6 +69,7 @@ class DotPlots(object):
         self._getAxisSizes(xlim, ylim)
         self._getMemberColors(memberColors, groupColors, nestedColors)
         self._getErrBarColors(errBarColors)
+        self._getErrBarLwds(errBarLwds)
         self._getBackgroundColors(memberBackgroundColors)
 
         memberCoords, groupCoords = self.plot(main=main, xlab=xlab, ylab=ylab)
@@ -77,6 +79,7 @@ class DotPlots(object):
         return memberCoords, groupCoords
 
     def plot(self, xlab="", ylab="", main=""):
+        print "*"*200
         # open plotting with an empty plot, custom axes
         r.plot(1, xlim=self.xlim, ylim=self.ylim, xlab=xlab, ylab=ylab, xaxt="n", yaxt="n", type="n", main=main, **self.plotArgs)
         r.axis(2, **self.yaxisArgs)
@@ -107,15 +110,16 @@ class DotPlots(object):
         if self.drawConfInt:
             import scipy.stats
 
-        for member, curColor in zip(self.members, self.errBarColors):
+        print self.errBarLwds
+        for member, curColor, curLwd in zip(self.members, self.errBarColors, self.errBarLwds):
             x = self.positions[member]
                     
             if self.drawMeans:
                 y = numpy.mean(self.data[member])
-                r.segments(x-0.2, y, x+0.2, y, lwd=2, col=curColor)
+                r.segments(x-0.2, y, x+0.2, y, lwd=curLwd, col=curColor)
             elif self.drawMedians:
                 y = numpy.median(self.data[member])
-                r.segments(x-0.2, y, x+0.2, y, lwd=2, col=curColor)
+                r.segments(x-0.2, y, x+0.2, y, lwd=curLwd, col=curColor)
 
             curValues = numpy.asarray(self.data[member])
             curValues = curValues[~numpy.isnan(curValues)]
@@ -145,6 +149,11 @@ class DotPlots(object):
             self.errBarColors = [self.defaultErrBarColors] * len(self.members)
         else:
             self.errBarColors = aslist(errBarColors, len(self.members))
+    def _getErrBarLwds(self, errBarLwds):
+        if errBarLwds is None:
+            self.errBarLwds = [self.defaultErrBarLwd] * len(self.members)
+        else:
+            self.errBarLwds = aslist(errBarLwds, len(self.members))
 
     def _getMemberColors(self, memberColors, groupColors, nestedColors):
         if sum(map(bool, [memberColors, groupColors, nestedColors])) > 1:
