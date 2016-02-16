@@ -315,6 +315,21 @@ def plotWithSolidErrbars(x, y, upper, lower, add=False, errbarcol="lightgray", p
     return x, y, upper, lower, errbarx, errbary
 
 
+def plotMatrixAsImage(mat, x1=None, y1=None, x2=None, y2=None, maxval=None, main=""):
+    """ adds the image to the current plot if x1, x2, y1 and y2 are defined;
+    otherwise, create a new image with the dimensions of the matrix """
+    if x1 is None:
+        x1 = y1 = 0
+        x2 = mat.shape[1]
+        y2 = mat.shape[0]
+        print x1, x2, y1, y2
+        r.plot([0], xlim=[0,x2], ylim=[0,y2], type="n", main=main)
+
+    if maxval is None:
+        maxval = mat.max()
+    r.rasterImage(r["as.raster"](mat, max=maxval), x1, y1, x2, y2)
+
+
 def dotplots(data, groups=None, **kwdargs):
     constructorArgs = ["betweenMembers", "betweenGroups", "jitter", "drawMemberLabels", 
                        "mar", "drawMeans", "drawStd", "drawConfInt", "errBarColors", "pointsArgs", "plotArgs",
@@ -322,7 +337,7 @@ def dotplots(data, groups=None, **kwdargs):
                        "drawMedians"]
 
     drawArgs = ["groupLabels", "groupColors", "xlim", "ylim", "memberColors", "nestedColors",
-                "memberBackgroundColors", "errBarColors", "main", "xlab", "ylab"]
+                "memberBackgroundColors", "errBarColors", "errBarLwds", "main", "xlab", "ylab"]
 
     for kwd in kwdargs:
         if kwd not in constructorArgs and kwd not in drawArgs:

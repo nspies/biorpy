@@ -1,7 +1,8 @@
 # import os
 # from IPython.lib.display import IFrame
+import StringIO
 from IPython.core.displaypub import publish_display_data
-from IPython.display import display_html
+from IPython.display import display_html, Image
 import tempfile
 from glob import glob
 from shutil import rmtree
@@ -64,6 +65,15 @@ class InlineImage(object):
 
 iimage = InlineImage()
 
+try:
+    from scipy import misc
+    def png(matrix):
+        b = StringIO.StringIO()
+        misc.imsave(b, matrix, "png")
+        return Image(data=b.getvalue(), format="png")
+except ImportError:
+    def png(data):
+        raise Exception("need to install scipy and PIL")
 
 # # Switching to use IPython.lib.display.IFrame
 # IFRAMEHTML = """<a href="{path}">{path}</a><br /><iframe name="myiframe" id="myiframe" src="{path}" height={height}px width=100%></iframe>"""
