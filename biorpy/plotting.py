@@ -323,7 +323,7 @@ def plotMatrixAsImage(mat, x1=None, y1=None, x2=None, y2=None, maxval=None, main
         x2 = mat.shape[1]
         y2 = mat.shape[0]
         print x1, x2, y1, y2
-        r.plot([0], xlim=[0,x2], ylim=[0,y2], type="n", main=main)
+    r.plot([0], xlim=[x1,x2], ylim=[y1,y2], type="n", main=main)
 
     if maxval is None:
         maxval = mat.max()
