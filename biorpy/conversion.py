@@ -70,7 +70,7 @@ class ResultWrapper(object):
         self._result = result
 
     def __repr__(self):
-        return str(dict(self.iteritems()))
+        return str(dict(iter(self.items())))
     def __str__(self):
         return str(self._result)
 

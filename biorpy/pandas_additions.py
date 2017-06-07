@@ -29,46 +29,46 @@ def _sw(df, up_rows=10, down_rows=5, left_cols=4, right_cols=3, return_df=False,
         up_pt.insert(left_cols, '..', '..')
         down_pt.insert(left_cols, '..', '..')
 
-        max_width = max(map(len, up_pt.index) + map(len, down_pt.index))
+        max_width = max(list(map(len, up_pt.index)) + list(map(len, down_pt.index)))
         up_pt.index = [str(x).ljust(max_width) for x in up_pt.index]
         down_pt.index = [str(x).ljust(max_width) for x in down_pt.index]
 
     overlap_qty = len(up_pt) + len(down_pt) - len(df)
-    down_pt = down_pt.drop(down_pt.index[range(overlap_qty)]) # remove overlap rows
+    down_pt = down_pt.drop(down_pt.index[list(range(overlap_qty))]) # remove overlap rows
 
     dt_str_list = down_pt.to_string().split('\n') # transfer down_pt to string list
 
     # Display up part data
-    print up_pt.to_string()
+    print(up_pt.to_string())
 
     start_row = (1 if df.index.names[0] is None else 2) # start from 1 if without index
 
     # Display omit line if screen height is not enought to display all rows
     if overlap_qty < 0:
-        print "." * len(dt_str_list[start_row])
+        print("." * len(dt_str_list[start_row]))
 
     # Display down part data row by row
     for line in dt_str_list[start_row:]:
-        print line
+        print(line)
 
     # Display foot note
-    print "\n"
+    print("\n")
     if len(df.index) > labels_limit:
-        print "Index :", ", ".join(map(str, df.index[:int(labels_limit/2.0)].tolist()))
-        print "..."
-        print ", ".join(map(str, df.index[-int(labels_limit/2.0):].tolist()))
+        print("Index :", ", ".join(map(str, df.index[:int(labels_limit/2.0)].tolist())))
+        print("...")
+        print(", ".join(map(str, df.index[-int(labels_limit/2.0):].tolist())))
     else:
-        print "Index :", ", ".join(map(str, df.index.tolist()))
+        print("Index :", ", ".join(map(str, df.index.tolist())))
 
     if len(df.columns) > labels_limit:
-        print "Column:", ", ".join(map(str, list(df.columns[:int(labels_limit/2.0)].tolist())))
-        print "..." 
-        print ", ".join(map(str, list(df.columns[-int(labels_limit/2.0):].tolist())))
+        print("Column:", ", ".join(map(str, list(df.columns[:int(labels_limit/2.0)].tolist()))))
+        print("...") 
+        print(", ".join(map(str, list(df.columns[-int(labels_limit/2.0):].tolist()))))
     else:
-        print "Column:", ", ".join(map(str, list(df.columns.values)))
+        print("Column:", ", ".join(map(str, list(df.columns.values))))
 
-    print "rows: %d    cols: %d"%(len(df), len(df.columns))
-    print "\n"
+    print("rows: %d    cols: %d"%(len(df), len(df.columns)))
+    print("\n")
 
     return (df if return_df else None)
 pandas.DataFrame.sw = _sw  #add a method to DataFrame class

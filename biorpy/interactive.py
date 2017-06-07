@@ -1,6 +1,6 @@
 # import os
 # from IPython.lib.display import IFrame
-import StringIO
+import io
 from IPython.core.displaypub import publish_display_data
 from IPython.display import display_html, Image
 import tempfile
@@ -68,7 +68,7 @@ iimage = InlineImage()
 try:
     from scipy import misc
     def png(matrix):
-        b = StringIO.StringIO()
+        b = io.StringIO()
         misc.imsave(b, matrix, "png")
         return Image(data=b.getvalue(), format="png")
 except ImportError:

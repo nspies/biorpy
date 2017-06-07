@@ -13,7 +13,7 @@ def asdict(x, defaults=None):
 def aslist(value, length):
     if isinstance(value, list):
         assert len(value) == length
-    elif isinstance(value, basestring) or isinstance(value, int) or isinstance(value, float):
+    elif isinstance(value, str) or isinstance(value, int) or isinstance(value, float):
         value = [value] * length
     return value
 
@@ -79,7 +79,7 @@ class DotPlots(object):
         return memberCoords, groupCoords
 
     def plot(self, xlab="", ylab="", main=""):
-        print "*"*200
+        print("*"*200)
         # open plotting with an empty plot, custom axes
         r.plot(1, xlim=self.xlim, ylim=self.ylim, xlab=xlab, ylab=ylab, xaxt="n", yaxt="n", type="n", main=main, **self.plotArgs)
         r.axis(2, **self.yaxisArgs)
@@ -110,7 +110,7 @@ class DotPlots(object):
         if self.drawConfInt:
             import scipy.stats
 
-        print self.errBarLwds
+        print(self.errBarLwds)
         for member, curColor, curLwd in zip(self.members, self.errBarColors, self.errBarLwds):
             x = self.positions[member]
                     
@@ -165,7 +165,7 @@ class DotPlots(object):
         elif memberColors is not None:
             if isinstance(memberColors, list):
                 assert len(memberColors) == len(self.members)
-            elif isinstance(memberColors, basestring):
+            elif isinstance(memberColors, str):
                 memberColors = [memberColors] * len(self.members)
         elif nestedColors is not None:
             memberColors = nestedColors

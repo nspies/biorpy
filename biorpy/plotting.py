@@ -20,7 +20,7 @@ from biorpy.dotplots import DotPlots, asdict
 
 def _setdefaults(toupdate, defaults):
     """ calls dict.setdefault() multiple times """
-    for key, val in defaults.iteritems():
+    for key, val in defaults.items():
         toupdate.setdefault(key, val)
 
 def plotMulti(xs, ys, names, colors=None, legendWhere="bottomright", xlab="", ylab="", plotArgs=None, lineArgs=None, **kwdargs):
@@ -196,7 +196,7 @@ def boxPlot(dict_, keysInOrder=None, **kwdargs):
     """
 
     if not keysInOrder:
-        keysInOrder = dict_.keys()
+        keysInOrder = list(dict_.keys())
         
     t = TaggedList([])
     for key in keysInOrder:
@@ -218,7 +218,7 @@ def barPlot(dict_, keysInOrder=None, printCounts=True, ylim=None, *args, **kwdar
     """
 
     if not keysInOrder:
-        keysInOrder = dict_.keys()
+        keysInOrder = list(dict_.keys())
     
     heights = [dict_[key] for key in keysInOrder]
 
@@ -256,7 +256,7 @@ def scatterplotMatrix(dataFrame, main="", **kwdargs):
     if isinstance(dataFrame, pandas.core.frame.DataFrame):
         df = dataFrame
     else:
-        taggedList = TaggedList(map(robj.FloatVector, [dataFrame[col] for col in dataFrame.columns]), dataFrame.columns)
+        taggedList = TaggedList(list(map(robj.FloatVector, [dataFrame[col] for col in dataFrame.columns])), dataFrame.columns)
         df = robj.DataFrame(taggedList)
 
     #print taggedList
@@ -322,7 +322,7 @@ def plotMatrixAsImage(mat, x1=None, y1=None, x2=None, y2=None, maxval=None, main
         x1 = y1 = 0
         x2 = mat.shape[1]
         y2 = mat.shape[0]
-        print x1, x2, y1, y2
+        print(x1, x2, y1, y2)
     r.plot([0], xlim=[x1,x2], ylim=[y1,y2], type="n", main=main)
 
     if maxval is None:

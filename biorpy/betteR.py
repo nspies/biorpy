@@ -184,7 +184,7 @@ class BetteR(object):
             attr = self.aliases[attr]
 
         if attr.startswith("gg"):
-            print "do something for ggplot..."
+            print("do something for ggplot...")
 
         if not attr in self._handlers:
             self._handlers[attr] = Handler(attr)
@@ -202,8 +202,8 @@ class BetteR(object):
 if __name__ == '__main__':
     r = BetteR()
 
-    result = r["wilcox.test"](robjects.FloatVector(range(5)), robjects.FloatVector([1,2,55,3,6]))
-    print result.py["p.value"]
+    result = r["wilcox.test"](robjects.FloatVector(list(range(5))), robjects.FloatVector([1,2,55,3,6]))
+    print(result.py["p.value"])
 
     #r.plot(robjects.FloatVector(range(5)), robjects.FloatVector([1,2,55,3,6]))
 
