@@ -24,6 +24,9 @@ def convertToR(obj):
     an R DataFrame.  If it's a Series, treat it like a vector/numpy
     array. 
     """
+    if isinstance(obj, range):
+        obj = list(obj)
+        
     if isinstance(obj, pandas.core.frame.DataFrame):
         return pandasDataFrameToRPy2DataFrame(obj)
     elif isinstance(obj, pandas.Series) or isinstance(obj, pandas.core.index.NumericIndex):
