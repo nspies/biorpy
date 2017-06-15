@@ -55,6 +55,8 @@ class InlineImage(object):
             elif self.format == "png":
                 imageFiles = glob("{}/Rplots*png".format(self.directory))
                 image_type = "image/png"
+                
+            imageFiles.sort()
             images = [open(imgfile, 'rb').read() for imgfile in imageFiles]
 
             for image in images:
