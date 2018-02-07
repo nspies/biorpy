@@ -23,7 +23,7 @@ def _setdefaults(toupdate, defaults):
     for key, val in defaults.items():
         toupdate.setdefault(key, val)
 
-def plotMulti(xs, ys, names, colors=None, legendWhere="bottomright", xlab="", ylab="", plotArgs=None, lineArgs=None, **kwdargs):
+def plotMulti(xs, ys, names, colors=None, ltys=1, legendWhere="bottomright", xlab="", ylab="", plotArgs=None, lineArgs=None, legendArgs=None, **kwdargs):
     """ Plot multiple lines on the same axes; convenience function for calling 
     r.plot() and then r.lines() (possibly multiple times) and adding an r.legend()
 
@@ -48,6 +48,12 @@ def plotMulti(xs, ys, names, colors=None, legendWhere="bottomright", xlab="", yl
     if colors is None:
         colors = ["red", "blue", "green", "orange", "brown", "purple", "black"]
 
+    try:
+        if len(ltys) < len(xs):
+            ltys = ltys * len(xs)
+    except TypeError:
+        ltys = [ltys] * len(xs)
+        
     ylim = [min(min(y) for y in ys), max(max(y) for y in ys)]
     xlim = [min(min(x) for x in xs), max(max(x) for x in xs)]
 
@@ -64,11 +70,14 @@ def plotMulti(xs, ys, names, colors=None, legendWhere="bottomright", xlab="", yl
 
     for i in range(len(xs)):
         if i == 0:
-            r.plot(xs[0], ys[0], col=colors[0], **plotArgs)
+            r.plot(xs[0], ys[0], col=colors[0], lty=ltys[i], **plotArgs)
         else:
-            r.lines(xs[i], ys[i], col=colors[i%len(colors)], **lineArgs)
+            r.lines(xs[i], ys[i], col=colors[i%len(colors)], lty=ltys[i], **lineArgs)
 
-    r.legend(legendWhere, legend=names, lty=1, lwd=2, col=colors, bg="white")
+    legendArgsDefaults = {"legend":names, "lty":ltys, "lwd":2, "col":colors, "bg":"white"}
+    legendArgsDefaults.update(legendArgs)
+    
+    r.legend(legendWhere, **legendArgsDefaults)
 
 
 def plotWithCor(x, y, method="spearman", main="", **kwdargs):
